@@ -1,101 +1,247 @@
-import Image from "next/image";
+'use client';
+
+import UploadCheckListForm from "../components/upload-widget"
+import CheckListItems from "../components/sections"
+import LivoTableSection from "../components/livo-table"
+import { CheckListItem } from "@/interfaces/global";
+import { useState } from "react";
+
+
+const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  console.log('Selected file:', file);
+};
+
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const [items, setItems] = useState([
+    {
+      name: "Mechanical",
+      data: [{
+        name: "Apple",
+        completed: true
+      }],
+      display: true
+    },
+    {
+      name: "Production",
+      data: [{
+        name: "Apple 2",
+        completed: false
+      }],
+      display: true
+    }
+  ]);
+
+  const handleTableItemChange = (sectionId: number, index: number, column: string, newData: any) => {
+    const updatedItems = [...items];
+
+    // updatedItems[index].data = newData;
+    // setItems(updatedItems);
+    console.log(sectionId, index, column, newData)
+  };
+
+  const handleSectionCreate = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const updatedItems = [...items];
+    let sectionName = (event.currentTarget.elements.namedItem("sectionName") as HTMLInputElement).value;
+    updatedItems.push({
+      name: sectionName,
+      data: [{
+        name: "",
+        completed: false
+      }],
+      display: true
+    })
+    setItems(updatedItems);
+  }
+
+  const handleChangeSectionList = (rowIndex: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const updatedItems = [...items];
+    updatedItems[rowIndex].display = event.target.checked
+    setItems(updatedItems);
+  }
+
+
+  interface ContextMenuProps {
+    sectionId: number;
+    x: number;
+    y: number;
+    onClose: () => void;
+  }
+
+  const addRowToTable = (sectionId: number,
+    e: React.MouseEvent<HTMLLIElement, MouseEvent>
+  ) => {
+    const updatedItems = [...items];
+    let row = updatedItems[sectionId].data[0]
+
+    let newRow: any = {};
+    Object.keys(row).forEach((key) => {
+      // @ts-ignore
+      if (typeof row[key] == "string") {
+        newRow[key] = "";
+
+        // @ts-ignore
+      } else if (typeof row[key] == "boolean") {
+        newRow[key] = false;
+      } else {
+        newRow[key] = ""
+      }
+    })
+
+    updatedItems[sectionId].data.push(newRow);
+    setItems(updatedItems);
+  };
+
+  const addColumnToTable = (sectionId: number,
+    e: React.MouseEvent<HTMLLIElement, MouseEvent>
+  ) => {
+    const updatedItems = [...items];
+    let key_counts = Object.keys(updatedItems[sectionId].data[0]).length
+    // @ts-ignore
+    updatedItems[sectionId].data = updatedItems[sectionId].data.map((item) => {
+      // @ts-ignore
+      item["column" + key_counts] = "";
+      return item;
+    });
+    setItems(updatedItems);
+
+  };
+
+  const deleteRowFromTable = (sectionId: number,
+    e: React.MouseEvent<HTMLLIElement, MouseEvent>
+  ) => {
+    const updatedItems = [...items];
+    updatedItems[sectionId].data.pop();
+    setItems(updatedItems);
+  };
+
+  const deleteColumnFromTable = (sectionId: number,
+    e: React.MouseEvent<HTMLLIElement, MouseEvent>
+  ) => {
+    const updatedItems = [...items];
+    let removeColumn = Object.keys(updatedItems[sectionId].data[0]).pop();
+
+    // @ts-ignore
+    updatedItems[sectionId].data = updatedItems[sectionId].data.map((item) => {
+      // @ts-ignore
+      delete item[removeColumn];
+      return item;
+    });
+    setItems(updatedItems);
+
+  };
+
+  const ContextMenu: React.FC<ContextMenuProps> = ({ sectionId, x, y, onClose }) => {
+    return (
+      <div
+        className="absolute z-50 w-40 bg-white border rounded shadow-md"
+        style={{ top: y, left: x }}
+        onClick={onClose} // Close menu when clicked
+      >
+        <ul className="text-sm">
+          <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={(event) => addRowToTable(sectionId, event)}>Add Row</li>
+          <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={(event) => addColumnToTable(sectionId, event)}>Add Column</li>
+          <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-500" onClick={(event) => deleteRowFromTable(sectionId, event)}>
+            Remove Row
+          </li>
+          <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-500" onClick={(event) => deleteColumnFromTable(sectionId, event)}>
+            Remove Column
+          </li>
+        </ul>
+      </div>
+    );
+  };
+
+  const [menuPosition, setMenuPosition] = useState<{ sectionId: number, x: number; y: number } | null>(null);
+
+  const handleOnContextMenu = (sectionId: number,
+    e: React.MouseEvent<HTMLTableElement, MouseEvent>
+  ) => {
+    setMenuPosition({ sectionId: sectionId, x: e.pageX, y: e.pageY });
+  };
+
+  const handleCloseMenu = () => {
+    setMenuPosition(null);
+  };
+
+  const handleOnChangeColumnName = (sectionId: number, oldKey: string, newKey: string) => {
+    const updatedItems = [...items];
+
+    // @ts-ignore
+    updatedItems[sectionId].data = updatedItems[sectionId].data.map((item) => {
+      const updatedItem: Record<string, any> = {};
+
+      // Iterate over the keys in the original item to preserve order
+      Object.keys(item).forEach((key) => {
+        if (key === oldKey) {
+          // Replace old key with the new key
+          // @ts-ignore
+          updatedItem[newKey] = item[key];
+        } else {
+          // Keep other keys unchanged
+          // @ts-ignore
+          updatedItem[key] = item[key];
+        }
+      });
+
+      return updatedItem;
+    });
+    setItems(updatedItems);
+    console.log(sectionId, oldKey, newKey)
+  };
+
+
+  return (
+    <div>
+
+      <aside id="default-sidebar" className="fixed top-0 left-0 z-40 w-80 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
+        <div className="logo-header bg-blue-950">
+          <div className="p-2 flex flex-row">
+            <img src="logo.svg" height="30" />
+
+            <svg className="w-6 h-6 text-red-400 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-3 5h3m-6 0h.01M12 16h3m-6 0h.01M10 3v4h4V3h-4Z" />
+            </svg>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <UploadCheckListForm id="upload-checklist" name="upload file" onChange={handleFileChange} />
+        <CheckListItems items={items} onSectionListChange={handleChangeSectionList} onSectionCreate={handleSectionCreate} />
+      </aside>
+      <div className="sm:ml-80">
+        <div className="p-1 border-2 border-gray-200 rounded-lg dark:border-gray-700">
+
+          <div className="flex flex-wrap">
+            {items.map((item: CheckListItem, rowIndex: number) => (
+
+              <LivoTableSection key={item.name} display={item.display} sectionName={item.name} sectionId={rowIndex} items={item.data} onItemsChange={handleTableItemChange} onContextMenu={handleOnContextMenu} onChangeColumnName={handleOnChangeColumnName} />
+
+            ))}
+          </div>
+
+        </div>
+      </div>
+
+      {/* Context Menu */}
+      {menuPosition && (
+        <ContextMenu
+          sectionId={menuPosition.sectionId}
+          x={menuPosition.x}
+          y={menuPosition.y}
+          onClose={handleCloseMenu}
+        />
+      )}
+
+      {/* Overlay to close the menu when clicking elsewhere */}
+      {menuPosition && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={handleCloseMenu}
+        ></div>
+      )}
     </div>
   );
 }
