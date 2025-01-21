@@ -10,7 +10,7 @@ const CheckListItems: React.FC<CheckListSection> = (props) => {
         <input type="submit" className="mx-2 px-2 py-1 text-xs rounded-sm bg-lime-700 hover:bg-lime-800 text-white" value="Add section" />
       </form>
       <div className="checklist-items mt-2">
-        <h2 className='bg-blue-950 p-2 text-white'>Sections</h2>
+        <h2 className='bg-blue-950 p-2 text-sm text-white'>Sections</h2>
         <div className='p-2 border border-blue-950'>
           {props.items.map((item: CheckListItem, rowIndex: number) => (
             <div className="flex flex-row" key={rowIndex}>

@@ -43,13 +43,12 @@ const LivoTableSection: React.FC<LivoTableSectionInterface> = ({ display, sectio
   };
 
   return (
-    <div className={`m-1 p-1 border ${display ? "" : "hidden"}`}>
-      <div className="relative overflow-x-auto">
-        <div className="p-2 text-white border bg-blue-950">
-          {sectionName}
-        </div>
-        <table id={sectionName} className="table-auto w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400" onContextMenu={(event) => handleContextMenu(sectionId, event)}>
-
+    <div className={`m-1 p-1 border overflow-x-auto ${display ? "" : "hidden"}`}>
+      <div className="relative">
+        <table id={sectionName} className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400" onContextMenu={(event) => handleContextMenu(sectionId, event)}>
+          <caption className="p-2 text-sm text-left rtl:text-right text-white bg-blue-950 dark:text-white dark:bg-gray-800">
+            {sectionName}
+          </caption>
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
               <th scope="col" className="px-1 py-1">

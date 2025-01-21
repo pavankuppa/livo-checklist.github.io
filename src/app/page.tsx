@@ -5,7 +5,8 @@ import CheckListItems from "../components/sections"
 import LivoTableSection from "../components/livo-table"
 import { CheckListItem } from "@/interfaces/global";
 import { useState } from "react";
-
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   const file = event.target.files?.[0];
@@ -193,11 +194,41 @@ export default function Home() {
     console.log(sectionId, oldKey, newKey)
   };
 
+  const exportAsJSON = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    var blob = new Blob([JSON.stringify(items)], { type: "text/json;charset=utf-8" });
+    saveAs(blob, "checklist-" + Date.now() + ".json");
+  };
+
+  const exportAsXLSX = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+
+    function capitalize(s: string) {
+      return String(s[0]).toUpperCase() + String(s).slice(1);
+    }
+
+    const workbook = XLSX.utils.book_new();
+
+    items.forEach((item) => {
+      const worksheet = XLSX.utils.json_to_sheet(item.data);
+
+      let headers = Object.keys(item.data[0]).map((x) => {
+        return capitalize(x);
+      });
+
+      XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: "A1" });
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, item.name);
+    })
+
+    XLSX.writeFile(workbook, "checklist-" + Date.now() + ".xlsx", { compression: true });
+  }
+
 
   return (
     <div>
 
-      <aside id="default-sidebar" className="fixed top-0 left-0 z-40 w-80 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
+      <aside id="default-sidebar" className="fixed top-0 left-0 z-40 w-80 bg-slate-100 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
         <div className="logo-header bg-blue-950">
           <div className="p-2 flex flex-row">
             <img src="logo.svg" height="30" />
@@ -210,19 +241,32 @@ export default function Home() {
 
         <UploadCheckListForm id="upload-checklist" name="upload file" onChange={handleFileChange} />
         <CheckListItems items={items} onSectionListChange={handleChangeSectionList} onSectionCreate={handleSectionCreate} />
-      </aside>
-      <div className="sm:ml-80">
-        <div className="p-1 border-2 border-gray-200 rounded-lg dark:border-gray-700">
-
-          <div className="flex flex-wrap">
-            {items.map((item: CheckListItem, rowIndex: number) => (
-
-              <LivoTableSection key={item.name} display={item.display} sectionName={item.name} sectionId={rowIndex} items={item.data} onItemsChange={handleTableItemChange} onContextMenu={handleOnContextMenu} onChangeColumnName={handleOnChangeColumnName} />
-
-            ))}
+        <div className="static">
+          <div className="absolute bottom-0 left-0 flex text-sm p-2 bg-blue-100 w-80">
+            <div>
+              Export as:
+            </div>
+            <div className="pl-1 text-sky-500">
+              <button onClick={exportAsJSON}>JSON</button>,
+            </div>
+            <div className="pl-1 text-sky-500">
+              <button onClick={exportAsXLSX}>XLSX</button>
+            </div>
           </div>
-
         </div>
+      </aside>
+      <div className="sm:ml-80 z-0 w-10/12">
+
+
+        <div className="flex flex-wrap size-full">
+          {items.map((item: CheckListItem, rowIndex: number) => (
+
+            <LivoTableSection key={item.name} display={item.display} sectionName={item.name} sectionId={rowIndex} items={item.data} onItemsChange={handleTableItemChange} onContextMenu={handleOnContextMenu} onChangeColumnName={handleOnChangeColumnName} />
+
+          ))}
+        </div>
+
+
       </div>
 
       {/* Context Menu */}
