@@ -12,6 +12,17 @@ export interface CheckListItem {
     display: boolean;
 }
 
+export interface LivoCheckList {
+  projectName: string;
+  date: Date;
+  partNumber: string;
+  partName: string;
+  drawnBy: string;
+  reviewedBy: string;
+  data: CheckListItem[];
+}
+
+
 export interface CheckListSection {
   items: CheckListItem[];
   onSectionCreate: (event: any) => void;
@@ -23,7 +34,6 @@ export interface LivoTableSectionInterface {
   sectionName: string;
   sectionId: number;
   items: any;
-  onItemsChange: (rowIndex: number, index: number, column: string, newValue: any) => void;
   onContextMenu: (sectionId: number, event: React.MouseEvent<HTMLTableElement, MouseEvent>) => void;
   onChangeColumnName: (sectionId: number, oldValue: string, newValue: string) => void;
 }

@@ -1,10 +1,14 @@
 import { LivoTableSectionInterface } from '@/interfaces/global';
-import { Underdog } from 'next/font/google';
 import React from 'react';
+import { useState } from "react";
 
 
-const LivoTableSection: React.FC<LivoTableSectionInterface> = ({ display, sectionName, sectionId, items, onItemsChange, onContextMenu, onChangeColumnName }) => {
-  // const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+const LivoTableSection: React.FC<LivoTableSectionInterface> = ({ display, sectionName, sectionId, items, onContextMenu, onChangeColumnName }) => {
+
+
+  const [selectedRowIndex, setSelectedRowIndex] = useState(-1);
+  const [selectedColumn, setSelectedColumn] = useState("");
+
 
   const handleContextMenu = (sectionId: number,
     e: React.MouseEvent<HTMLTableElement, MouseEvent>
@@ -22,16 +26,19 @@ const LivoTableSection: React.FC<LivoTableSectionInterface> = ({ display, sectio
     childrens[2].classList.remove("hidden");
   };
 
-  // const handleCloseMenu = () => {
-  //   setMenuPosition(null);
-  // };
-
-  const handleInputChange = (rowIndex: number, index: number, column: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    onItemsChange(rowIndex, index, column, event.target.value);
+  const handleInputChange = (rowIndex: number, column: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    items[rowIndex][column] = event.target.value
+    presetTableRowEdit();
   };
 
-  const handleCheckboxChange = (rowIndex: number, index: number, column: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    onItemsChange(rowIndex, index, column, event.target.checked);
+  const presetTableRowEdit = () => {
+    setSelectedRowIndex(-1)
+    setSelectedColumn("");
+  };
+
+  const handleCheckboxChange = (rowIndex: number, column: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    items[rowIndex][column] = event.target.checked
+    presetTableRowEdit();
   };
 
   const onEditColumnName = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -40,6 +47,13 @@ const LivoTableSection: React.FC<LivoTableSectionInterface> = ({ display, sectio
     childrens[0].classList.remove("hidden");
     childrens[1].classList.add("hidden");
     childrens[2].classList.add("hidden");
+  };
+
+  const onColumnDataEdit = (rowIndex: number, columnName: string, event: React.MouseEvent<HTMLTableCellElement, MouseEvent>) => {
+    event.preventDefault();
+    setSelectedRowIndex(rowIndex);
+    setSelectedColumn(columnName);
+    (event.currentTarget.firstChild as HTMLInputElement).autofocus;
   };
 
   return (
@@ -63,18 +77,14 @@ const LivoTableSection: React.FC<LivoTableSectionInterface> = ({ display, sectio
                     </div>
                     <div>{col}</div>
                     <div className='cursor-pointer' onClick={(event) => onEditColumnName(event)}>
-                      <svg className="w-3 h-4 ml-1 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28" />
+                      <svg className="w-3 h-4 ml-1 text-gray-800 dark:text-white" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                        <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
                       </svg>
                     </div>
-                    {/* <div className='cursor-pointer hidden'>
-                      <svg className="w-3 h-4 ml-l text-green-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                      </svg>
-                    </div> */}
                   </div>
                 </th>
               ))}
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -86,18 +96,40 @@ const LivoTableSection: React.FC<LivoTableSectionInterface> = ({ display, sectio
                   </th>
                   {
                     Object.keys(data).map((col: string, colIndex: number) => (
-                      <td className="px-6 py-4" key={colIndex}>
+                      <td className="px-6 py-4" key={colIndex} onClick={(event) => onColumnDataEdit(rowIndex, col, event)}>
                         {typeof data[col] === "string" ? (
-                          <input type="text" name={`items[${data.id}][${col}]`} defaultValue={data[col]} onChange={(e) => handleInputChange(sectionId, rowIndex, col, e)} className="px-2 py-1 bg-white border shadow-sm border-slate-300 placeholder-slate-400  disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md sm:text-sm focus:ring-1 invalid:border-pink-500 invalid:text-pink-600 focus:invalid:border-pink-500 focus:invalid:ring-pink-500 disabled:shadow-none" />
-                        ) : typeof data[col] === "boolean" ? (
+                          selectedRowIndex === rowIndex && selectedColumn === col ? (
+                            <input type="text" name={`items[${rowIndex}][${col}]`} defaultValue={data[col]} onBlur={(e) => handleInputChange(rowIndex, col, e)} className="px-2 py-1 bg-white border-b-2 border-gray-300 focus:outline-none text-sm " />
+                          ) : (data[col])
 
-                          <input type="checkbox" name={`items[${data.id}][${col}]`} defaultChecked={data[col]} onChange={(e) => handleCheckboxChange(sectionId, rowIndex, col, e)} />
+
+                        ) : typeof data[col] === "boolean" ? (
+                          selectedRowIndex === rowIndex && selectedColumn === col ? (
+                            <input type="checkbox" name={`items[${rowIndex}][${col}]`} defaultChecked={data[col]} onChange={(e) => handleCheckboxChange(rowIndex, col, e)} />
+                          ) : (
+                            data[col] == true ? (
+                              <span className="text-xs text-green-800 me-2 px-1.5 py-0.5 uppercase">{data[col] + ""}</span>
+                            ) : (
+                              <span className="text-xs text-red-800 me-2 px-1.5 py-0.5 uppercase">{data[col] + ""}</span>
+                            )
+                          )
                         ) : typeof data[col] === "number" ? (
+
                           data[col]
+
                         ) : null}
                       </td>
                     ))
                   }
+                  <td>
+                    <div className="flex">
+                      <button type="button" className="cursor-pointer ml-1">
+                        <svg className="w-5 h-6 text-red-600 dark:text-white" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                          <path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </React.Fragment>
             ))}

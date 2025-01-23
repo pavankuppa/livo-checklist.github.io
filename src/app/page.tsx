@@ -16,8 +16,14 @@ const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 
 export default function Home() {
 
-  const [items, setItems] = useState([
-    {
+  const [livoCheckList, setItems] = useState({
+    projectName: "",
+    date: "",
+    partName: "",
+    partNumber: "",
+    reviewedBy: "",
+    drawnBy: "",
+    sections: [{
       name: "Mechanical",
       data: [{
         name: "Apple",
@@ -32,22 +38,22 @@ export default function Home() {
         completed: false
       }],
       display: true
-    }
-  ]);
+    }]
+  });
 
-  const handleTableItemChange = (sectionId: number, index: number, column: string, newData: any) => {
-    const updatedItems = [...items];
+  interface AlertProps {
+    message: string;
+    type: string;
+  }
 
-    // updatedItems[index].data = newData;
-    // setItems(updatedItems);
-    console.log(sectionId, index, column, newData)
-  };
+  const [alertMessage, setAlertMessage] = useState<{ message: string, type: string } | null>(null);
 
   const handleSectionCreate = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const updatedItems = [...items];
+    const updateLivoCheckList = livoCheckList;
+
     let sectionName = (event.currentTarget.elements.namedItem("sectionName") as HTMLInputElement).value;
-    updatedItems.push({
+    updateLivoCheckList.sections.push({
       name: sectionName,
       data: [{
         name: "",
@@ -55,13 +61,13 @@ export default function Home() {
       }],
       display: true
     })
-    setItems(updatedItems);
+    setItems(updateLivoCheckList);
   }
 
   const handleChangeSectionList = (rowIndex: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    const updatedItems = [...items];
-    updatedItems[rowIndex].display = event.target.checked
-    setItems(updatedItems);
+    const updateLivoCheckList = livoCheckList;
+    updateLivoCheckList.sections[rowIndex].display = event.target.checked
+    setItems(updateLivoCheckList);
   }
 
 
@@ -75,8 +81,8 @@ export default function Home() {
   const addRowToTable = (sectionId: number,
     e: React.MouseEvent<HTMLLIElement, MouseEvent>
   ) => {
-    const updatedItems = [...items];
-    let row = updatedItems[sectionId].data[0]
+    const updateLivoCheckList = livoCheckList;
+    let row = updateLivoCheckList.sections[sectionId].data[0]
 
     let newRow: any = {};
     Object.keys(row).forEach((key) => {
@@ -92,46 +98,46 @@ export default function Home() {
       }
     })
 
-    updatedItems[sectionId].data.push(newRow);
-    setItems(updatedItems);
+    updateLivoCheckList.sections[sectionId].data.push(newRow);
+    setItems(updateLivoCheckList);
   };
 
   const addColumnToTable = (sectionId: number,
     e: React.MouseEvent<HTMLLIElement, MouseEvent>
   ) => {
-    const updatedItems = [...items];
-    let key_counts = Object.keys(updatedItems[sectionId].data[0]).length
+    const updateLivoCheckList = livoCheckList;
+    let key_counts = Object.keys(updateLivoCheckList.sections[sectionId].data[0]).length
     // @ts-ignore
-    updatedItems[sectionId].data = updatedItems[sectionId].data.map((item) => {
+    updateLivoCheckList.sections[sectionId].data = updateLivoCheckList.sections[sectionId].data.map((item) => {
       // @ts-ignore
       item["column" + key_counts] = "";
       return item;
     });
-    setItems(updatedItems);
+    setItems(updateLivoCheckList);
 
   };
 
   const deleteRowFromTable = (sectionId: number,
     e: React.MouseEvent<HTMLLIElement, MouseEvent>
   ) => {
-    const updatedItems = [...items];
-    updatedItems[sectionId].data.pop();
-    setItems(updatedItems);
+    const updateLivoCheckList = livoCheckList;
+    updateLivoCheckList.sections[sectionId].data.pop();
+    setItems(updateLivoCheckList);
   };
 
   const deleteColumnFromTable = (sectionId: number,
     e: React.MouseEvent<HTMLLIElement, MouseEvent>
   ) => {
-    const updatedItems = [...items];
-    let removeColumn = Object.keys(updatedItems[sectionId].data[0]).pop();
+    const updateLivoCheckList = livoCheckList;
+    let removeColumn = Object.keys(updateLivoCheckList.sections[sectionId].data[0]).pop();
 
     // @ts-ignore
-    updatedItems[sectionId].data = updatedItems[sectionId].data.map((item) => {
+    updateLivoCheckList.sections[sectionId].data = updateLivoCheckList.sections[sectionId].data.map((item) => {
       // @ts-ignore
       delete item[removeColumn];
       return item;
     });
-    setItems(updatedItems);
+    setItems(updateLivoCheckList);
 
   };
 
@@ -156,6 +162,7 @@ export default function Home() {
     );
   };
 
+
   const [menuPosition, setMenuPosition] = useState<{ sectionId: number, x: number; y: number } | null>(null);
 
   const handleOnContextMenu = (sectionId: number,
@@ -169,10 +176,10 @@ export default function Home() {
   };
 
   const handleOnChangeColumnName = (sectionId: number, oldKey: string, newKey: string) => {
-    const updatedItems = [...items];
+    const updateLivoCheckList = livoCheckList;
 
     // @ts-ignore
-    updatedItems[sectionId].data = updatedItems[sectionId].data.map((item) => {
+    updateLivoCheckList.sections[sectionId].data = updateLivoCheckList.sections[sectionId].data.map((item) => {
       const updatedItem: Record<string, any> = {};
 
       // Iterate over the keys in the original item to preserve order
@@ -190,18 +197,26 @@ export default function Home() {
 
       return updatedItem;
     });
-    setItems(updatedItems);
-    console.log(sectionId, oldKey, newKey)
+    setItems(updateLivoCheckList);
   };
 
   const exportAsJSON = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    var blob = new Blob([JSON.stringify(items)], { type: "text/json;charset=utf-8" });
+    if (!validateBeforeExport()) {
+      return false;
+    }
+
+    var blob = new Blob([JSON.stringify(livoCheckList)], { type: "text/json;charset=utf-8" });
     saveAs(blob, "checklist-" + Date.now() + ".json");
   };
 
   const exportAsXLSX = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
+
+    if (!validateBeforeExport()) {
+
+      return false;
+    }
 
     function capitalize(s: string) {
       return String(s[0]).toUpperCase() + String(s).slice(1);
@@ -209,7 +224,7 @@ export default function Home() {
 
     const workbook = XLSX.utils.book_new();
 
-    items.forEach((item) => {
+    livoCheckList.sections.forEach((item) => {
       const worksheet = XLSX.utils.json_to_sheet(item.data);
 
       let headers = Object.keys(item.data[0]).map((x) => {
@@ -223,6 +238,51 @@ export default function Home() {
 
     XLSX.writeFile(workbook, "checklist-" + Date.now() + ".xlsx", { compression: true });
   }
+
+  const validateBeforeExport = () => {
+    if (livoCheckList.projectName == "" || livoCheckList.date == "" || livoCheckList.partName == "" || livoCheckList.partNumber == "" || livoCheckList.reviewedBy == "" || livoCheckList.drawnBy == "") {
+      setAlertMessage({ message: "Invalid data to export", type: "error" });
+
+      window.setTimeout(() => {
+        const dialog = document.getElementById('alert-modal') as HTMLDialogElement;
+        console.log(dialog);
+        dialog.show();
+      }, 2000);
+      return false;
+    } else {
+      setAlertMessage(null);
+      return true;
+    }
+  };
+
+
+  const Alert: React.FC<AlertProps> = ({ message, type }) => {
+    return (
+      <div id="alert-modal" className="modal overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div className="relative p-4 w-full max-w-md max-h-full">
+          <div className="relative bg-white rounded-lg shadow dark:bg-gray-700">
+            <button type="button" className="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="alert-modal">
+              <span className="sr-only">Close modal</span>
+            </button>
+            <div className="p-4 md:p-5 text-center">
+              {type == "error" ? (
+                <div className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                  <span className="font-medium">{message}</span>
+                </div>
+              ) : type == "success" ? (
+                <div className="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
+                  <span className="font-medium">{message}</span>
+                </div>
+              ) : (
+                <span className="font-medium">{message}</span>
+              )
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
 
   return (
@@ -240,7 +300,29 @@ export default function Home() {
         </div>
 
         <UploadCheckListForm id="upload-checklist" name="upload file" onChange={handleFileChange} />
-        <CheckListItems items={items} onSectionListChange={handleChangeSectionList} onSectionCreate={handleSectionCreate} />
+
+        <div className="p-2 flex flex-col">
+          <div className="mb-2">
+            <input type="text" id="projectName" name="projectName" placeholder="Project name" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setProjectName(event.currentTarget.value)} />
+          </div>
+          <div className="mb-2">
+            <input type="date" id="date" name="date" placeholder="Date" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setDate(event.currentTarget.value)} />
+          </div>
+          <div className="mb-2">
+            <input type="text" id="partName" name="partName" placeholder="Part name" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setPartName(event.currentTarget.value)} />
+          </div>
+          <div className="mb-2">
+            <input type="number" id="partNumber" name="partNumber" placeholder="Part number" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setPartNumber(event.currentTarget.value)} />
+          </div>
+          <div className="mb-2">
+            <input type="text" id="reviewedBy" name="reviewedBy" placeholder="Reviewed by" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setReviewedBy(event.currentTarget.value)} />
+          </div>
+          <div className="mb-2">
+            <input type="text" id="drawnBy" name="drawnBy" placeholder="Drawn by" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setDrawnBy(event.currentTarget.value)} />
+          </div>
+        </div>
+
+        <CheckListItems items={livoCheckList.sections} onSectionListChange={handleChangeSectionList} onSectionCreate={handleSectionCreate} />
         <div className="static">
           <div className="absolute bottom-0 left-0 flex text-sm p-2 bg-blue-100 w-80">
             <div>
@@ -259,9 +341,9 @@ export default function Home() {
 
 
         <div className="flex flex-wrap size-full">
-          {items.map((item: CheckListItem, rowIndex: number) => (
+          {livoCheckList.sections.map((item: CheckListItem, rowIndex: number) => (
 
-            <LivoTableSection key={item.name} display={item.display} sectionName={item.name} sectionId={rowIndex} items={item.data} onItemsChange={handleTableItemChange} onContextMenu={handleOnContextMenu} onChangeColumnName={handleOnChangeColumnName} />
+            <LivoTableSection key={item.name} display={item.display} sectionName={item.name} sectionId={rowIndex} items={item.data} onContextMenu={handleOnContextMenu} onChangeColumnName={handleOnChangeColumnName} />
 
           ))}
         </div>
@@ -285,6 +367,10 @@ export default function Home() {
           className="fixed inset-0 z-40"
           onClick={handleCloseMenu}
         ></div>
+      )}
+
+      {alertMessage && (
+        <Alert message={alertMessage.message} type={alertMessage.type} />
       )}
     </div>
   );
