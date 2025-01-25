@@ -255,6 +255,24 @@ export default function Home() {
     }
   };
 
+  const setFromDetails = (name: string, value: string) => {
+    const updateLivoCheckList = livoCheckList;
+    if (name === "projectName")
+      updateLivoCheckList.projectName = value;
+    else if (name == "date")
+      updateLivoCheckList.date = value;
+    else if (name == "partName")
+      updateLivoCheckList.partName = value;
+    else if (name == "partNumber")
+      updateLivoCheckList.partNumber = value;
+    else if (name == "reviewedBy")
+      updateLivoCheckList.reviewedBy = value;
+    else if (name == "drawnBy")
+      updateLivoCheckList.drawnBy = value;
+
+    setItems(updateLivoCheckList);
+  }
+
 
   const Alert: React.FC<AlertProps> = ({ message, type }) => {
     return (
@@ -303,22 +321,22 @@ export default function Home() {
 
         <div className="p-2 flex flex-col">
           <div className="mb-2">
-            <input type="text" id="projectName" name="projectName" placeholder="Project name" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setProjectName(event.currentTarget.value)} />
+            <input type="text" id="projectName" name="projectName" placeholder="Project name" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setFromDetails("projectName", event.currentTarget.value)} />
           </div>
           <div className="mb-2">
-            <input type="date" id="date" name="date" placeholder="Date" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setDate(event.currentTarget.value)} />
+            <input type="date" id="date" name="date" placeholder="Date" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setFromDetails("date", event.currentTarget.value)} />
           </div>
           <div className="mb-2">
-            <input type="text" id="partName" name="partName" placeholder="Part name" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setPartName(event.currentTarget.value)} />
+            <input type="text" id="partName" name="partName" placeholder="Part name" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setFromDetails("partName", event.currentTarget.value)} />
           </div>
           <div className="mb-2">
-            <input type="number" id="partNumber" name="partNumber" placeholder="Part number" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setPartNumber(event.currentTarget.value)} />
+            <input type="number" id="partNumber" name="partNumber" placeholder="Part number" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setFromDetails("partNumber", event.currentTarget.value)} />
           </div>
           <div className="mb-2">
-            <input type="text" id="reviewedBy" name="reviewedBy" placeholder="Reviewed by" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setReviewedBy(event.currentTarget.value)} />
+            <input type="text" id="reviewedBy" name="reviewedBy" placeholder="Reviewed by" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setFromDetails("reviewedBy", event.currentTarget.value)} />
           </div>
           <div className="mb-2">
-            <input type="text" id="drawnBy" name="drawnBy" placeholder="Drawn by" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setDrawnBy(event.currentTarget.value)} />
+            <input type="text" id="drawnBy" name="drawnBy" placeholder="Drawn by" className="text-sm p-2 w-full focus:outline-none" onChange={(event) => setFromDetails("drawnBy", event.currentTarget.value)} />
           </div>
         </div>
 
